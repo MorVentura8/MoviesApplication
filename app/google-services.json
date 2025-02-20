@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "913584927623",
+    "firebase_url": "https://movie-30e52-default-rtdb.firebaseio.com",
+    "project_id": "movie-30e52",
+    "storage_bucket": "movie-30e52.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:913584927623:android:79276fb72e6e5706345922",
+        "android_client_info": {
+          "package_name": "com.example.moviesapplication"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAIpDOKNdrZLJYoGnPECN7ZJUvqdBCi_ZM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
