@@ -36,14 +36,14 @@ public class LoginFragment extends Fragment {
         etPassword = view.findViewById(R.id.et_password);
         btnLogin = view.findViewById(R.id.btn_login);
         btnRegister = view.findViewById(R.id.btn_register);
-        btnLogin.setOnClickListener(v -> loginUser(view));
+        btnLogin.setOnClickListener(v -> loginUser());
         btnRegister.setOnClickListener(v ->
                 Navigation.findNavController(view).navigate(R.id.action_loginFragment_to_registerFragment)
         );
         return view;
     }
 
-    private void loginUser(View view) {
+    private void loginUser() {
         String userName = etUsername.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
@@ -62,30 +62,37 @@ public class LoginFragment extends Fragment {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists()) {
-                            // Loop through results (should be only one)
                             for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                                 String dbPassword = snapshot.child("password").getValue(String.class);
                                 if (dbPassword != null && dbPassword.equals(password)) {
-                                    // שמירת המשתמש הנוכחי
-                                    Users currentUser = new Users(userName, password, snapshot.child("phoneNumber").getValue(String.class));
+                                    // Store user info
+                                    Users currentUser = new Users(userName, password, 
+                                        snapshot.child("phoneNumber").getValue(String.class));
                                     FirebaseAuthManager.setCurrentUser(currentUser);
 
-                                    Toast.makeText(getActivity(), "Login successful!", Toast.LENGTH_SHORT).show();
-                                    Navigation.findNavController(view).navigate(R.id.action_loginFragment_to_registerFragment);
+                                    Toast.makeText(getActivity(), "Login successful!", 
+                                        Toast.LENGTH_SHORT).show();
 
-
-                                } else {
-                                    Toast.makeText(getActivity(), "Incorrect password!", Toast.LENGTH_SHORT).show();
+                                    // Navigate to movies fragment
+                                    if (isAdded() && getView() != null) {
+                                        Navigation.findNavController(getView())
+                                            .navigate(R.id.action_loginFragment_to_allMoviesFragment);
+                                    }
+                                    return; // Exit after successful login
                                 }
                             }
+                            // If we get here, password was incorrect
+                            Toast.makeText(getActivity(), "Incorrect password!", 
+                                Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(getActivity(), "User not found!", Toast.LENGTH_SHORT).show();
                         }
                     }
 
                     @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        Toast.makeText(getActivity(), "Database error: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Toast.makeText(getActivity(), "Error: " + error.getMessage(), 
+                            Toast.LENGTH_SHORT).show();
                     }
                 });
     }
