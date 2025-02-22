@@ -14,6 +14,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.moviesapplication.data.model.Users;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -22,6 +23,7 @@ import com.google.firebase.database.ValueEventListener;
 
 public class LoginFragment extends Fragment {
 
+    private static final String TAG = "LoginFragment";
     private EditText etUsername, etPassword;
     private Button btnLogin, btnRegister;
     private DatabaseReference databaseReference;
@@ -61,32 +63,54 @@ public class LoginFragment extends Fragment {
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists()) {
-                            // Loop through results (should be only one)
-                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                                String dbPassword = snapshot.child("password").getValue(String.class);
-                                if (dbPassword != null && dbPassword.equals(password)) {
-                                    // שמירת המשתמש הנוכחי
-                                    Users currentUser = new Users(userName, password, snapshot.child("phoneNumber").getValue(String.class));
-                                    FirebaseAuthManager.setCurrentUser(currentUser);
+                        try {
+                            if (dataSnapshot.exists()) {
+                                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                    String dbPassword = snapshot.child("password").getValue(String.class);
+                                    if (dbPassword != null && dbPassword.equals(password)) {
+                                        // Create and store user
+                                        Users currentUser = new Users(userName, password, 
+                                            snapshot.child("phoneNumber").getValue(String.class));
+                                        FirebaseAuthManager.setCurrentUser(currentUser);
 
-
-                                    Toast.makeText(getActivity(), "Login successful!", Toast.LENGTH_SHORT).show();
-                                    Navigation.findNavController(view).navigate(R.id.action_loginFragment_to_registerFragment);
-
-
-                                } else {
-                                    Toast.makeText(getActivity(), "Incorrect password!", Toast.LENGTH_SHORT).show();
+                                        if (getActivity() != null) {
+                                            Toast.makeText(getActivity(), "Login successful!", 
+                                                Toast.LENGTH_SHORT).show();
+                                            
+                                            try {
+                                                Navigation.findNavController(view)
+                                                    .navigate(R.id.action_loginFragment_to_allMoviesFragment);
+                                            } catch (Exception e) {
+                                                Toast.makeText(getActivity(), 
+                                                    "Navigation error: " + e.getMessage(), 
+                                                    Toast.LENGTH_LONG).show();
+                                            }
+                                        }
+                                    } else {
+                                        Toast.makeText(getActivity(), "Incorrect password!", 
+                                            Toast.LENGTH_SHORT).show();
+                                    }
                                 }
+                            } else {
+                                Toast.makeText(getActivity(), "User not found!", 
+                                    Toast.LENGTH_SHORT).show();
                             }
-                        } else {
-                            Toast.makeText(getActivity(), "User not found!", Toast.LENGTH_SHORT).show();
+                        } catch (Exception e) {
+                            if (getActivity() != null) {
+                                Toast.makeText(getActivity(), 
+                                    "Error during login: " + e.getMessage(), 
+                                    Toast.LENGTH_LONG).show();
+                            }
                         }
                     }
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
-                        Toast.makeText(getActivity(), "Database error: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+                        if (getActivity() != null) {
+                            Toast.makeText(getActivity(), 
+                                "Database error: " + databaseError.getMessage(), 
+                                Toast.LENGTH_SHORT).show();
+                        }
                     }
                 });
     }

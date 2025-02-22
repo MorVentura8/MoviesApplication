@@ -1,6 +1,6 @@
 package com.example.moviesapplication;
 
-import com.example.moviesapplication.model.Users;
+import com.example.moviesapplication.data.model.Users;
 
 public class FirebaseAuthManager {
     private static String currentUsername;
