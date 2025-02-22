@@ -14,7 +14,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.example.moviesapplication.model.Users;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -37,14 +36,14 @@ public class LoginFragment extends Fragment {
         etPassword = view.findViewById(R.id.et_password);
         btnLogin = view.findViewById(R.id.btn_login);
         btnRegister = view.findViewById(R.id.btn_register);
-        btnLogin.setOnClickListener(v -> loginUser());
+        btnLogin.setOnClickListener(v -> loginUser(view));
         btnRegister.setOnClickListener(v ->
                 Navigation.findNavController(view).navigate(R.id.action_loginFragment_to_registerFragment)
         );
         return view;
     }
 
-    private void loginUser() {
+    private void loginUser(View view) {
         String userName = etUsername.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
@@ -63,37 +62,31 @@ public class LoginFragment extends Fragment {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists()) {
+                            // Loop through results (should be only one)
                             for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                                 String dbPassword = snapshot.child("password").getValue(String.class);
                                 if (dbPassword != null && dbPassword.equals(password)) {
-                                    // Store user info
-                                    Users currentUser = new Users(userName, password, 
-                                        snapshot.child("phoneNumber").getValue(String.class));
+                                    // שמירת המשתמש הנוכחי
+                                    Users currentUser = new Users(userName, password, snapshot.child("phoneNumber").getValue(String.class));
                                     FirebaseAuthManager.setCurrentUser(currentUser);
 
-                                    Toast.makeText(getActivity(), "Login successful!", 
-                                        Toast.LENGTH_SHORT).show();
 
-                                    // Navigate to movies fragment
-                                    if (isAdded() && getView() != null) {
-                                        Navigation.findNavController(getView())
-                                            .navigate(R.id.action_loginFragment_to_allMoviesFragment);
-                                    }
-                                    return; // Exit after successful login
+                                    Toast.makeText(getActivity(), "Login successful!", Toast.LENGTH_SHORT).show();
+                                    Navigation.findNavController(view).navigate(R.id.action_loginFragment_to_registerFragment);
+
+
+                                } else {
+                                    Toast.makeText(getActivity(), "Incorrect password!", Toast.LENGTH_SHORT).show();
                                 }
                             }
-                            // If we get here, password was incorrect
-                            Toast.makeText(getActivity(), "Incorrect password!", 
-                                Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(getActivity(), "User not found!", Toast.LENGTH_SHORT).show();
                         }
                     }
 
                     @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        Toast.makeText(getActivity(), "Error: " + error.getMessage(), 
-                            Toast.LENGTH_SHORT).show();
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Toast.makeText(getActivity(), "Database error: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
     }
