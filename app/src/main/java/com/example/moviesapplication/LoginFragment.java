@@ -71,7 +71,7 @@ public class LoginFragment extends Fragment {
                                     FirebaseAuthManager.setCurrentUser(currentUser);
 
                                     Toast.makeText(getActivity(), "Login successful!", Toast.LENGTH_SHORT).show();
-                                    Navigation.findNavController(view).navigate(R.id.action_loginFragment_to_registerFragment);
+                                    Navigation.findNavController(view).navigate(R.id.action_loginFragment_to_allMoviesFragment);
 
 
                                 } else {
