@@ -12,7 +12,6 @@ public class Movie {
     private double voteAverage;
     private boolean isFavorite;
 
-    // Required empty constructor for Firebase
     public Movie() {
     }
 
