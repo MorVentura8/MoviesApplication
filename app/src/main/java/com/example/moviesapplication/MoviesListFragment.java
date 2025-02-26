@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.appcompat.widget.SearchView;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -28,8 +29,10 @@ public class MoviesListFragment extends Fragment implements MovieAdapter.OnMovie
     private RecyclerView recyclerView;
     private MovieAdapter movieAdapter;
     private ProgressBar progressBar;
+    private SearchView searchView;
     private TMDBApiService apiService;
     private List<Movie> movies = new ArrayList<>();
+    private List<Movie> filteredMovies = new ArrayList<>();
     private SharedViewModel sharedViewModel;
 
     @Override
@@ -38,6 +41,7 @@ public class MoviesListFragment extends Fragment implements MovieAdapter.OnMovie
 
         sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
         setupViews(view);
+        setupSearchView();
         setupRetrofit();
         loadMovies();
         observeFavoriteRemovals();
@@ -48,10 +52,42 @@ public class MoviesListFragment extends Fragment implements MovieAdapter.OnMovie
     private void setupViews(View view) {
         recyclerView = view.findViewById(R.id.rv_movies);
         progressBar = view.findViewById(R.id.progress_bar);
+        searchView = view.findViewById(R.id.search_view);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        movieAdapter = new MovieAdapter(movies, this, this);
+        movieAdapter = new MovieAdapter(filteredMovies, this, this);
         recyclerView.setAdapter(movieAdapter);
+    }
+
+    private void setupSearchView() {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                filterMovies(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filterMovies(newText);
+                return true;
+            }
+        });
+    }
+
+    private void filterMovies(String query) {
+        filteredMovies.clear();
+        if (query.isEmpty()) {
+            filteredMovies.addAll(movies);
+        } else {
+            String lowerCaseQuery = query.toLowerCase().trim();
+            for (Movie movie : movies) {
+                if (movie.getTitle().toLowerCase().contains(lowerCaseQuery)) {
+                    filteredMovies.add(movie);
+                }
+            }
+        }
+        movieAdapter.notifyDataSetChanged();
     }
 
     private void setupRetrofit() {
@@ -89,6 +125,7 @@ public class MoviesListFragment extends Fragment implements MovieAdapter.OnMovie
         List<?> results = (List<?>) response.get("results");
         if (results != null) {
             movies.clear();
+            filteredMovies.clear();
             for (Object result : results) {
                 if (result instanceof Map) {
                     Map<?, ?> movieData = (Map<?, ?>) result;
@@ -105,6 +142,7 @@ public class MoviesListFragment extends Fragment implements MovieAdapter.OnMovie
                     checkFavoriteStatus(movie);
                 }
             }
+            filteredMovies.addAll(movies);
             movieAdapter.notifyDataSetChanged();
         }
     }
@@ -154,12 +192,10 @@ public class MoviesListFragment extends Fragment implements MovieAdapter.OnMovie
                     .child(currentUser.getUserName())
                     .child(String.valueOf(movie.getId()));
 
-            // Check current state in Firebase before updating
             favRef.get().addOnSuccessListener(snapshot -> {
                 boolean isCurrentlyFavorite = snapshot.exists();
                 
                 if (!isCurrentlyFavorite) {
-                    // Add to favorites
                     favRef.setValue(movie)
                             .addOnSuccessListener(aVoid -> {
                                 movie.setFavorite(true);
@@ -172,7 +208,6 @@ public class MoviesListFragment extends Fragment implements MovieAdapter.OnMovie
                                 movieAdapter.notifyDataSetChanged();
                             });
                 } else {
-                    // Remove from favorites
                     favRef.removeValue()
                             .addOnSuccessListener(aVoid -> {
                                 movie.setFavorite(false);

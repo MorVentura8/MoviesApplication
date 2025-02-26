@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.appcompat.widget.SearchView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -26,7 +27,9 @@ public class FavoritesListFragment extends Fragment implements MovieAdapter.OnMo
     private MovieAdapter movieAdapter;
     private ProgressBar progressBar;
     private TextView emptyView;
+    private SearchView searchView;
     private List<Movie> favoriteMovies = new ArrayList<>();
+    private List<Movie> filteredMovies = new ArrayList<>();
     private DatabaseReference databaseReference;
     private SharedViewModel sharedViewModel;
 
@@ -36,6 +39,7 @@ public class FavoritesListFragment extends Fragment implements MovieAdapter.OnMo
 
         sharedViewModel = new ViewModelProvider(requireActivity()).get(SharedViewModel.class);
         setupViews(view);
+        setupSearchView();
         setupFirebase();
         loadFavorites();
 
@@ -46,9 +50,9 @@ public class FavoritesListFragment extends Fragment implements MovieAdapter.OnMo
         recyclerView = view.findViewById(R.id.rv_movies);
         progressBar = view.findViewById(R.id.progress_bar);
         emptyView = view.findViewById(R.id.empty_view);
+        searchView = view.findViewById(R.id.search_view);
 
         if (emptyView == null) {
-            // Create empty view if it doesn't exist in layout
             emptyView = new TextView(requireContext());
             emptyView.setText("No favorites found");
             emptyView.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
@@ -57,8 +61,40 @@ public class FavoritesListFragment extends Fragment implements MovieAdapter.OnMo
         }
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        movieAdapter = new MovieAdapter(favoriteMovies, this, this);
+        movieAdapter = new MovieAdapter(filteredMovies, this, this);
         recyclerView.setAdapter(movieAdapter);
+    }
+
+    private void setupSearchView() {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                filterMovies(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filterMovies(newText);
+                return true;
+            }
+        });
+    }
+
+    private void filterMovies(String query) {
+        filteredMovies.clear();
+        if (query.isEmpty()) {
+            filteredMovies.addAll(favoriteMovies);
+        } else {
+            String lowerCaseQuery = query.toLowerCase().trim();
+            for (Movie movie : favoriteMovies) {
+                if (movie.getTitle().toLowerCase().contains(lowerCaseQuery)) {
+                    filteredMovies.add(movie);
+                }
+            }
+        }
+        movieAdapter.notifyDataSetChanged();
+        updateEmptyView();
     }
 
     private void setupFirebase() {
@@ -90,11 +126,11 @@ public class FavoritesListFragment extends Fragment implements MovieAdapter.OnMo
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 progressBar.setVisibility(View.GONE);
                 favoriteMovies.clear();
+                filteredMovies.clear();
                 
                 try {
                     for (DataSnapshot movieSnapshot : snapshot.getChildren()) {
                         try {
-                            // Get individual fields and construct Movie object
                             int id = movieSnapshot.child("id").getValue(Integer.class);
                             String title = movieSnapshot.child("title").getValue(String.class);
                             String overview = movieSnapshot.child("overview").getValue(String.class);
@@ -118,10 +154,10 @@ public class FavoritesListFragment extends Fragment implements MovieAdapter.OnMo
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
-                            // Continue to next movie if one fails
                             continue;
                         }
                     }
+                    filteredMovies.addAll(favoriteMovies);
                     movieAdapter.notifyDataSetChanged();
                     updateEmptyView();
                 } catch (Exception e) {
@@ -139,10 +175,14 @@ public class FavoritesListFragment extends Fragment implements MovieAdapter.OnMo
     }
 
     private void updateEmptyView() {
-        if (favoriteMovies.isEmpty()) {
+        if (filteredMovies.isEmpty()) {
+            if (favoriteMovies.isEmpty()) {
+                emptyView.setText("No favorites found");
+            } else {
+                emptyView.setText("No matches found");
+            }
             recyclerView.setVisibility(View.GONE);
             emptyView.setVisibility(View.VISIBLE);
-            emptyView.setText("No favorites found");
         } else {
             recyclerView.setVisibility(View.VISIBLE);
             emptyView.setVisibility(View.GONE);
@@ -183,14 +223,11 @@ public class FavoritesListFragment extends Fragment implements MovieAdapter.OnMo
         }
 
         try {
-            // Remove from Firebase
             databaseReference.child(String.valueOf(movie.getId())).removeValue()
                     .addOnSuccessListener(aVoid -> {
-                        // Remove from local list
                         favoriteMovies.remove(movie);
                         movieAdapter.notifyDataSetChanged();
                         updateEmptyView();
-                        // Notify other fragments about the removal
                         sharedViewModel.setRemovedFavorite(movie.getId());
                         showError("Removed from favorites");
                     })
