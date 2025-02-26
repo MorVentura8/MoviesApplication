@@ -15,11 +15,6 @@ import android.widget.Toast;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link RegisterFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class RegisterFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
@@ -27,7 +22,6 @@ public class RegisterFragment extends Fragment {
     private String mParam2;
 
     public RegisterFragment() {
-        // Required empty public constructor
     }
 
     public static RegisterFragment newInstance(String param1, String param2) {
@@ -51,7 +45,7 @@ public class RegisterFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+
         View view = inflater.inflate(R.layout.fragment_register, container, false);
 
         Button registerButton = view.findViewById(R.id.btnRegister);
@@ -86,7 +80,7 @@ public class RegisterFragment extends Fragment {
         FirebaseDatabase database = FirebaseDatabase.getInstance("https://movie-30e52-default-rtdb.firebaseio.com");
         DatabaseReference myRef = database.getReference("Users").child(userName);
 
-        Users uset = new Users(userName, password, phoneNumber); // מעבירים מה שרוצים לבנאי שלנו
+        Users uset = new Users(userName, password, phoneNumber);
         myRef.setValue(uset);
 
     }

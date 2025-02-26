@@ -15,7 +15,7 @@ public class MoviePagerAdapter extends FragmentStateAdapter {
     @NonNull
     @Override
     public Fragment createFragment(int position) {
-        // Return the appropriate fragment based on position
+
         return position == 0 ? new MoviesListFragment() : new FavoritesListFragment();
     }
 

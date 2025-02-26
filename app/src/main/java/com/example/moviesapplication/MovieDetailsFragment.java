@@ -70,7 +70,6 @@ public class MovieDetailsFragment extends Fragment {
         int movieId = getArguments().getInt("movieId", -1);
         if (movieId == -1) return;
 
-        // Load movie details
         apiService.getMovieDetails(movieId, BuildConfig.TMDB_API_KEY)
                 .enqueue(new Callback<Map<String, Object>>() {
                     @Override
@@ -89,7 +88,6 @@ public class MovieDetailsFragment extends Fragment {
                     }
                 });
 
-        // Load movie videos (for trailer)
         apiService.getMovieVideos(movieId, BuildConfig.TMDB_API_KEY)
                 .enqueue(new Callback<Map<String, Object>>() {
                     @Override

@@ -66,7 +66,7 @@ public class LoginFragment extends Fragment {
                             for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                                 String dbPassword = snapshot.child("password").getValue(String.class);
                                 if (dbPassword != null && dbPassword.equals(password)) {
-                                    // שמירת המשתמש הנוכחי
+
                                     Users currentUser = new Users(userName, password, snapshot.child("phoneNumber").getValue(String.class));
                                     FirebaseAuthManager.setCurrentUser(currentUser);
 

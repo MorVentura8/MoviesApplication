@@ -65,7 +65,6 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             favoriteImageView = itemView.findViewById(R.id.iv_favorite);
 
             itemView.setOnClickListener(v -> {
-                //int position = getBindingAdapterPosition();
                 int position = getAdapterPosition();
                 if (position != RecyclerView.NO_POSITION) {
                     movieClickListener.onMovieClick(movies.get(position));
@@ -73,7 +72,6 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             });
 
             favoriteImageView.setOnClickListener(v -> {
-                //int position = getBindingAdapterPosition();
                 int position = getAdapterPosition();
                 if (position != RecyclerView.NO_POSITION) {
                     Movie movie = movies.get(position);
